@@ -63,10 +63,8 @@ func draw(dc *gg.Context, repaint chan bool) {
 		x := float64(i)
 		y := float64(i)
 		dc.DrawCircle(x, y, 400)
-		dc.SetRGB(100, 0, 0)
+		dc.SetRGB(0xFF, 0x66, 0)
 		dc.Fill()
-		// Make sure this blocks, we don't want to modify the buffer while
-		// upload is in progress.
 		repaint <- true
 		time.Sleep(10)
 	}
