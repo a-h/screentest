@@ -49,7 +49,14 @@ func (a *Asteroid) Start(repaint chan PaintRequest) {
 	a.x = rand.Intn(a.bounds.Width())
 	a.y = rand.Intn(a.bounds.Height())
 
-	paints := 0
+	var b screen.Buffer
+	b, _ = a.s.NewBuffer(image.Point{a.size, a.size})
+	img := b.RGBA()
+	for ix := 0; ix < img.Bounds().Dx(); ix++ {
+		for iy := 0; iy < img.Bounds().Dy(); iy++ {
+			img.Set(ix, iy, a.color)
+		}
+	}
 
 	for {
 		if (a.x+a.size) > a.bounds.Width() || (a.x-a.size) < 0 {
@@ -64,9 +71,11 @@ func (a *Asteroid) Start(repaint chan PaintRequest) {
 		request := sd.Rectangle(a.x, a.y, a.size, a.size, a.color)
 		*/
 
-		repaint <- request
-
-		paints++
+		repaint <- PaintRequest{
+			dp:  image.Point{a.x, a.y},
+			src: b,
+			sr:  b.Bounds(),
+		}
 
 		a.x += a.directionX
 		a.y += a.directionY
@@ -91,7 +100,7 @@ func main() {
 
 		repaint := make(chan PaintRequest)
 
-		asteroids := make([]*Asteroid, 2)
+		asteroids := make([]*Asteroid, 10)
 		for i := 0; i < len(asteroids); i++ {
 			size := rand.Intn(80) + 20
 			directionX := rand.Intn(10) - rand.Intn(20)
@@ -123,7 +132,8 @@ func painter(w screen.Window, repaint chan PaintRequest) {
 	paints := 0
 	since := time.Now()
 
-	timer := time.NewTimer(time.Second / 30)
+	d, _ := time.ParseDuration("33ms")
+	timer := time.NewTimer(d)
 
 	queue := []PaintRequest{}
 
@@ -131,6 +141,7 @@ func painter(w screen.Window, repaint chan PaintRequest) {
 		select {
 		case pr := <-repaint:
 			queue = append(queue, pr)
+			// w.Upload(pr.dp, pr.src, pr.sr)
 			// w.Publish()
 
 		case <-timer.C:
@@ -138,11 +149,11 @@ func painter(w screen.Window, repaint chan PaintRequest) {
 				for _, pr := range queue {
 					w.Upload(pr.dp, pr.src, pr.sr)
 				}
-				for _, pr := range queue {
-					w.Publish()
-					pr.src.Release()
-				}
 				queue = []PaintRequest{}
+			}
+			w.Publish()
+			for _, pr := range queue {
+				pr.src.Release()
 			}
 
 			paints++
