@@ -49,6 +49,8 @@ func (a *Asteroid) Start(repaint chan PaintRequest) {
 	a.x = rand.Intn(a.bounds.Width())
 	a.y = rand.Intn(a.bounds.Height())
 
+	paints := 0
+
 	for {
 		if (a.x+a.size) > a.bounds.Width() || (a.x-a.size) < 0 {
 			a.x = rand.Intn(a.bounds.Width())
@@ -57,10 +59,14 @@ func (a *Asteroid) Start(repaint chan PaintRequest) {
 			a.y = rand.Intn(a.bounds.Height())
 		}
 
-		sd := NewSimpleDraw(a.w, a.s, a.bounds)
+		// Draw with sd.
+		/* sd := NewSimpleDraw(a.w, a.s, a.bounds)
 		request := sd.Rectangle(a.x, a.y, a.size, a.size, a.color)
+		*/
 
 		repaint <- request
+
+		paints++
 
 		a.x += a.directionX
 		a.y += a.directionY
@@ -85,11 +91,11 @@ func main() {
 
 		repaint := make(chan PaintRequest)
 
-		asteroids := make([]*Asteroid, 10)
+		asteroids := make([]*Asteroid, 2)
 		for i := 0; i < len(asteroids); i++ {
-			size := rand.Intn(40) + 5
-			directionX := rand.Intn(5) - rand.Intn(10)
-			directionY := rand.Intn(5) - rand.Intn(10)
+			size := rand.Intn(80) + 20
+			directionX := rand.Intn(10) - rand.Intn(20)
+			directionY := rand.Intn(10) - rand.Intn(20)
 			delay := rand.Intn(200000) + 1
 			randomColor := rand.Intn(215) + 1
 			color := palette.WebSafe[randomColor]
@@ -117,18 +123,28 @@ func painter(w screen.Window, repaint chan PaintRequest) {
 	paints := 0
 	since := time.Now()
 
-	timer := time.NewTimer(time.Second)
+	timer := time.NewTimer(time.Second / 30)
+
+	queue := []PaintRequest{}
 
 	for {
 		select {
 		case pr := <-repaint:
-			// w.Upload(pr.dp, pr.src, pr.sr)
-			w.Upload(pr.dp, pr.src, image.Rect(0, 0, 1800, 1000))
-			//w.Publish()
+			queue = append(queue, pr)
 			// w.Publish()
 
 		case <-timer.C:
-			w.Publish()
+			if len(queue) > 0 {
+				for _, pr := range queue {
+					w.Upload(pr.dp, pr.src, pr.sr)
+				}
+				for _, pr := range queue {
+					w.Publish()
+					pr.src.Release()
+				}
+				queue = []PaintRequest{}
+			}
+
 			paints++
 			if time.Now().Sub(since).Seconds() >= 1 {
 				fmt.Printf("%v fps\n", float64(paints)/time.Now().Sub(since).Seconds())
@@ -193,11 +209,6 @@ func (sd *SimpleDraw) Rectangle(x, y int, width, height int, c color.Color) Pain
 	// Use an image.
 	var b screen.Buffer
 	b, _ = sd.s.NewBuffer(image.Point{width, height})
-	defer func() {
-		if b != nil {
-			b.Release()
-		}
-	}()
 	img := b.RGBA()
 	for ix := 0; ix < img.Bounds().Dx(); ix++ {
 		for iy := 0; iy < img.Bounds().Dy(); iy++ {
