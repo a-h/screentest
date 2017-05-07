@@ -19,16 +19,16 @@ type Asteroid struct {
 	// The bounds of the Window.
 	bounds     WidthHeight
 	size       WidthHeight
-	x, y       int
-	directionX int
-	directionY int
+	x, y       float64
+	directionX float64
+	directionY float64
 	delay      time.Duration
 	color      color.Color
 	image      *image.RGBA
 }
 
 // NewAsteroid creates an Asteroid type.
-func NewAsteroid(bounds WidthHeight, size int, directionX int, directionY int, delay time.Duration, color color.Color) *Asteroid {
+func NewAsteroid(bounds WidthHeight, size int, directionX float64, directionY float64, delay time.Duration, color color.Color) *Asteroid {
 	a := &Asteroid{
 		size:       Bounds{size, size},
 		bounds:     bounds,
@@ -38,8 +38,8 @@ func NewAsteroid(bounds WidthHeight, size int, directionX int, directionY int, d
 		color:      color,
 	}
 
-	a.x = rand.Intn(a.bounds.Width())
-	a.y = rand.Intn(a.bounds.Height())
+	a.x = rand.Float64() * float64(a.bounds.Width())
+	a.y = rand.Float64() * float64(a.bounds.Height())
 
 	return a
 }
@@ -49,20 +49,20 @@ func (a *Asteroid) Tick() (at image.Point, img *image.RGBA) {
 	if a.x < 0 {
 		a.x = 0
 	}
-	if a.x > a.bounds.Width() {
-		a.x = a.bounds.Width()
+	if a.x > float64(a.bounds.Width()) {
+		a.x = float64(a.bounds.Width())
 	}
 	if a.y < 0 {
 		a.y = 0
 	}
-	if a.y > a.bounds.Height() {
-		a.y = a.bounds.Height()
+	if a.y > float64(a.bounds.Height()) {
+		a.y = float64(a.bounds.Height())
 	}
 
-	if (a.x+a.size.Width()) >= a.bounds.Width() || (a.x-a.size.Width()) <= 0 {
+	if (a.x+float64(a.size.Width())) >= float64(a.bounds.Width()) || (a.x-float64(a.size.Width())) <= 0 {
 		a.directionX = a.directionX * -1
 	}
-	if (a.y+a.size.Height()) >= a.bounds.Height() || (a.y-a.size.Height()) <= 0 {
+	if (float64(a.y)+float64(a.size.Height())) >= float64(a.bounds.Height()) || (a.y-float64(a.size.Height())) <= 0 {
 		a.directionY = a.directionY * -1
 	}
 
@@ -76,7 +76,7 @@ func (a *Asteroid) Tick() (at image.Point, img *image.RGBA) {
 	}
 
 	// Return where to draw the sprite.
-	at = image.Point{a.x, a.y}
+	at = image.Point{int(a.x), int(a.y)}
 
 	a.x += a.directionX
 	a.y += a.directionY
@@ -98,12 +98,12 @@ func main() {
 		}
 		defer w.Release()
 
-		asteroids := make([]*Asteroid, 15)
+		asteroids := make([]*Asteroid, 30)
 
 		for i := 0; i < len(asteroids); i++ {
 			size := rand.Intn(80) + 20
-			directionX := rand.Intn(5) - rand.Intn(5)
-			directionY := rand.Intn(5) - rand.Intn(5)
+			directionX := (rand.Float64() * 10.0) - (rand.Float64() * 20.0)
+			directionY := (rand.Float64() * 10.0) - (rand.Float64() * 20.0)
 			delay := rand.Intn(200000) + 1
 			randomColor := rand.Intn(215) + 1
 			color := palette.WebSafe[randomColor]
@@ -115,12 +115,13 @@ func main() {
 
 		background, _ := s.NewBuffer(image.Point{bounds.Width(), bounds.Height()})
 		tickIndex := 0
+		bkg := background.RGBA()
 
 		for {
-			drawBackground(background.RGBA())
+			drawBackground(bkg)
 			for _, a := range asteroids {
 				at, img := a.Tick()
-				draw.Draw(background.RGBA(),
+				draw.Draw(bkg,
 					image.Rect(at.X, at.Y, at.X+img.Rect.Dx(), at.Y+img.Rect.Dy()),
 					img,
 					image.Point{0, 0},
@@ -129,16 +130,29 @@ func main() {
 			w.Upload(image.Point{0, 0}, background, image.Rect(0, 0, 1800, 1000))
 			w.Publish()
 			tickIndex++
+			fmt.Println(tickIndex)
 		}
 	})
 }
 
 func drawBackground(img *image.RGBA) {
-	for x := 0; x < img.Bounds().Dx(); x++ {
-		for y := 0; y < img.Bounds().Dy(); y++ {
-			img.Set(x, y, color.White)
-		}
+	for i := range img.Pix {
+		img.Pix[i] = 0xff
 	}
+	/*
+		for i := 0; i < len(img.Pix); i += 4 {
+			img.Pix[i+0] = 0xff // R
+			img.Pix[i+1] = 0xff // G
+			img.Pix[i+2] = 0xff // B
+			img.Pix[i+3] = 0xff // A
+		}*/
+	/*
+		for x := 0; x < img.Bounds().Dx(); x++ {
+			for y := 0; y < img.Bounds().Dy(); y++ {
+				img.Set(x, y, color.White)
+			}
+		}
+	*/
 }
 
 func repaint(w screen.Window) {
