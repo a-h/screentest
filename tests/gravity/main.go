@@ -116,16 +116,21 @@ func main() {
 		background, _ := s.NewBuffer(image.Point{bounds.Width(), bounds.Height()})
 		tickIndex := 0
 		bkg := background.RGBA()
+		drawBackground(bkg)
+
+		spriteLocations := make([]image.Rectangle, len(asteroids))
 
 		for {
-			drawBackground(bkg)
-			for _, a := range asteroids {
+			clearSpriteLocations(bkg, spriteLocations)
+			for i, a := range asteroids {
 				at, img := a.Tick()
+				location := image.Rect(at.X, at.Y, at.X+img.Rect.Dx(), at.Y+img.Rect.Dy())
 				draw.Draw(bkg,
-					image.Rect(at.X, at.Y, at.X+img.Rect.Dx(), at.Y+img.Rect.Dy()),
+					location,
 					img,
 					image.Point{0, 0},
 					draw.Over)
+				spriteLocations[i] = location
 			}
 			w.Upload(image.Point{0, 0}, background, image.Rect(0, 0, 1800, 1000))
 			w.Publish()
@@ -133,6 +138,16 @@ func main() {
 			fmt.Println(tickIndex)
 		}
 	})
+}
+
+func clearSpriteLocations(img *image.RGBA, locations []image.Rectangle) {
+	for _, l := range locations {
+		for x := l.Min.X; x < l.Max.X; x++ {
+			for y := l.Min.Y; y < l.Max.Y; y++ {
+				img.Set(x, y, color.White)
+			}
+		}
+	}
 }
 
 func drawBackground(img *image.RGBA) {
