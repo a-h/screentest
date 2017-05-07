@@ -100,7 +100,7 @@ func main() {
 
 		repaint := make(chan PaintRequest)
 
-		asteroids := make([]*Asteroid, 10)
+		asteroids := make([]*Asteroid, 15)
 		for i := 0; i < len(asteroids); i++ {
 			size := rand.Intn(80) + 20
 			directionX := rand.Intn(10) - rand.Intn(20)
@@ -135,27 +135,14 @@ func painter(w screen.Window, repaint chan PaintRequest) {
 	d, _ := time.ParseDuration("33ms")
 	timer := time.NewTimer(d)
 
-	queue := []PaintRequest{}
-
 	for {
 		select {
 		case pr := <-repaint:
-			queue = append(queue, pr)
-			// w.Upload(pr.dp, pr.src, pr.sr)
-			// w.Publish()
+			w.Upload(pr.dp, pr.src, pr.src.Bounds())
+			w.Publish()
+			go pr.src.Release()
 
 		case <-timer.C:
-			if len(queue) > 0 {
-				for _, pr := range queue {
-					w.Upload(pr.dp, pr.src, pr.sr)
-				}
-				queue = []PaintRequest{}
-			}
-			w.Publish()
-			for _, pr := range queue {
-				pr.src.Release()
-			}
-
 			paints++
 			if time.Now().Sub(since).Seconds() >= 1 {
 				fmt.Printf("%v fps\n", float64(paints)/time.Now().Sub(since).Seconds())
