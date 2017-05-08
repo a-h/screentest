@@ -45,7 +45,7 @@ func NewAsteroid(bounds WidthHeight, size int, directionX float64, directionY fl
 }
 
 // Start starts rendering the Asteroid to the canvas.
-func (a *Asteroid) Tick() (at image.Point, img *image.RGBA) {
+func (a *Asteroid) Tick() (at image.Point, img *image.RGBA, changed bool) {
 	if a.x < 0 {
 		a.x = 0
 	}
@@ -76,12 +76,15 @@ func (a *Asteroid) Tick() (at image.Point, img *image.RGBA) {
 	}
 
 	// Return where to draw the sprite.
-	at = image.Point{int(a.x), int(a.y)}
+	oldX := int(a.x)
+	oldY := int(a.y)
 
 	a.x += a.directionX
 	a.y += a.directionY
 
-	return at, img
+	hasMoved := (int(a.x) != oldX) || (int(a.y) != oldY)
+
+	return image.Point{oldX, oldY}, img, hasMoved
 }
 
 func main() {
@@ -123,7 +126,10 @@ func main() {
 		for {
 			clearSpriteLocations(bkg, spriteLocations)
 			for i, a := range asteroids {
-				at, img := a.Tick()
+				at, img, hasMoved := a.Tick()
+				if !hasMoved {
+					continue
+				}
 				location := image.Rect(at.X, at.Y, at.X+img.Rect.Dx(), at.Y+img.Rect.Dy())
 				draw.Draw(bkg,
 					location,
