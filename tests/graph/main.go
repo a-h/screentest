@@ -36,9 +36,11 @@ func main() {
 
 		drawBackground(img, backgroundColor)
 
+		border := 50
+
 		xScale := Scaler{
-			InputMinimum:  0,
-			InputMaximum:  bounds.Width(),
+			InputMinimum:  0 + border,
+			InputMaximum:  bounds.Width() - border,
 			OutputMinimum: -10,
 			OutputMaximum: +10,
 		}
@@ -46,8 +48,8 @@ func main() {
 		yScale := Scaler{
 			InputMinimum:  -1,
 			InputMaximum:  +1,
-			OutputMinimum: bounds.Height(),
-			OutputMaximum: 0,
+			OutputMinimum: bounds.Height() - border,
+			OutputMaximum: 0 + border,
 		}
 
 		// Draw the x-axis.
