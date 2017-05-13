@@ -59,10 +59,10 @@ func (a *Asteroid) Tick() (at image.Point, img *image.RGBA, changed bool) {
 		a.y = float64(a.bounds.Height())
 	}
 
-	if (a.x+float64(a.size.Width())) >= float64(a.bounds.Width()) || (a.x-float64(a.size.Width())) <= 0 {
+	if (a.x+float64(a.size.Width())) >= float64(a.bounds.Width()) || a.x <= 0 {
 		a.directionX = a.directionX * -1
 	}
-	if (float64(a.y)+float64(a.size.Height())) >= float64(a.bounds.Height()) || (a.y-float64(a.size.Height())) <= 0 {
+	if (float64(a.y)+float64(a.size.Height())) >= float64(a.bounds.Height()) || a.y <= 0 {
 		a.directionY = a.directionY * -1
 	}
 
