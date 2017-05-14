@@ -9,6 +9,7 @@ import (
 
 	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
+	"golang.org/x/mobile/event/key"
 	"golang.org/x/mobile/event/lifecycle"
 )
 
@@ -108,6 +109,10 @@ func main() {
 				if e.To == lifecycle.StageDead {
 					fmt.Println("StageDead...")
 					return
+				}
+			case key.Event:
+				if e.Code == key.CodeUpArrow {
+					// Do something.
 				}
 			case error:
 			}
