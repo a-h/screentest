@@ -89,6 +89,11 @@ func main() {
 		//Middle to bottom left.
 		Line(img, 900, 500, 0, 1000, color.RGBA{R: 0xFF, G: 0xFF, B: 0xFF})
 
+		// Top to bottom.
+		// Line(img, 30, 0, 30, 1800, color.RGBA{R: 0xFF, G: 0xFF, B: 0xFF})
+		// Left to right.
+		// Line(img, 0, 30, 1800, 30, color.RGBA{R: 0xFF, G: 0xFF, B: 0xFF})
+
 		w.Upload(image.Point{0, 0}, background, image.Rect(0, 0, bounds.Width(), bounds.Height()))
 		w.Publish()
 
@@ -169,21 +174,39 @@ type WidthHeight interface {
 }
 
 func Line(img *image.RGBA, fromX, fromY int, toX, toY int, c color.RGBA) {
-	// Swap if the parameters are in the "wrong" order.
+	// Vertical line.
+	if fromX == toX {
+		for y := fromY; y < toY; y++ {
+			img.Set(fromX, y, c)
+		}
+		return
+	}
+
+	// Horizontal line.
+	if fromY == toY {
+		for x := fromX; x < toX; x++ {
+			img.Set(x, fromY, c)
+		}
+		return
+	}
+
+	// It's a slope.
+	// We're moving from fromX to toX, so make sure they're in the right order.
 	if toX < fromX {
 		toX, toY, fromX, fromY = fromX, fromY, toX, toY
 	}
+
 	var b int
 	if toY < fromY {
-		b = 1000
+		b = img.Bounds().Dy()
 	}
 
 	rise := toY - fromY
 	run := toX - fromX
-	slope := float64(rise) / float64(run)
+	m := float64(rise) / float64(run)
 
 	for x := fromX; x <= toX; x++ {
-		y := float64(x) * slope
-		img.Set(x, int(y)+b, c)
+		y := (m * float64(x)) + float64(b)
+		img.Set(x, int(y), c)
 	}
 }
