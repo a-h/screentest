@@ -79,6 +79,16 @@ func main() {
 			iy = int(yScale.Calculate(y))
 			img.Set(ix, iy, colorB)
 		}
+
+		// Middle to top right.
+		Line(img, 900, 500, 1800, 0, color.RGBA{R: 0xFF, G: 0x00, B: 0x00})
+		// Middle to bottom right.
+		Line(img, 900, 500, 1800, 1000, color.RGBA{R: 0x00, G: 0xFF, B: 0x00})
+		// Middle to top left.
+		Line(img, 900, 500, 0, 0, color.RGBA{R: 0x00, G: 0x00, B: 0xFF})
+		//Middle to bottom left.
+		Line(img, 900, 500, 0, 1000, color.RGBA{R: 0xFF, G: 0xFF, B: 0xFF})
+
 		w.Upload(image.Point{0, 0}, background, image.Rect(0, 0, bounds.Width(), bounds.Height()))
 		w.Publish()
 
@@ -156,4 +166,24 @@ func (b Bounds) Height() int {
 type WidthHeight interface {
 	Width() int
 	Height() int
+}
+
+func Line(img *image.RGBA, fromX, fromY int, toX, toY int, c color.RGBA) {
+	// Swap if the parameters are in the "wrong" order.
+	if toX < fromX {
+		toX, toY, fromX, fromY = fromX, fromY, toX, toY
+	}
+	var b int
+	if toY < fromY {
+		b = 1000
+	}
+
+	rise := toY - fromY
+	run := toX - fromX
+	slope := float64(rise) / float64(run)
+
+	for x := fromX; x <= toX; x++ {
+		y := float64(x) * slope
+		img.Set(x, int(y)+b, c)
+	}
 }
