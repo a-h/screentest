@@ -94,6 +94,10 @@ func main() {
 		// Left to right.
 		// Line(img, 0, 30, 1800, 30, color.RGBA{R: 0xFF, G: 0xFF, B: 0xFF})
 
+		Circle(img, 900, 500, 60, color.RGBA{R: 0xFF, G: 0x00, B: 0x00})
+
+		Disc(img, 1200, 700, 60, color.RGBA{R: 0x00, G: 0x33, B: 0x00})
+
 		w.Upload(image.Point{0, 0}, background, image.Rect(0, 0, bounds.Width(), bounds.Height()))
 		w.Publish()
 
@@ -171,6 +175,36 @@ func (b Bounds) Height() int {
 type WidthHeight interface {
 	Width() int
 	Height() int
+}
+
+func Circle(img *image.RGBA, x, y int, radius int, c color.RGBA) {
+	bounds := image.Rect(x-radius-2, y-radius-2, x+radius+2, y+radius+2)
+	for ix := bounds.Min.X; ix < bounds.Max.X; ix++ {
+		for iy := bounds.Min.Y; iy < bounds.Max.Y; iy++ {
+			width := x - ix
+			height := y - iy
+
+			distanceFromCenter := math.Sqrt(float64(((width * width) + (height * height))))
+			if int(distanceFromCenter) == radius {
+				img.Set(ix, iy, c)
+			}
+		}
+	}
+}
+
+func Disc(img *image.RGBA, x, y int, radius int, c color.RGBA) {
+	bounds := image.Rect(x-radius-2, y-radius-2, x+radius+2, y+radius+2)
+	for ix := bounds.Min.X; ix < bounds.Max.X; ix++ {
+		for iy := bounds.Min.Y; iy < bounds.Max.Y; iy++ {
+			width := x - ix
+			height := y - iy
+
+			distanceFromCenter := math.Sqrt(float64(((width * width) + (height * height))))
+			if int(distanceFromCenter) <= radius {
+				img.Set(ix, iy, c)
+			}
+		}
+	}
 }
 
 func Line(img *image.RGBA, fromX, fromY int, toX, toY int, c color.RGBA) {
