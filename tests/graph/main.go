@@ -76,6 +76,12 @@ func main() {
 			y = sigmoid(x)
 			iy, _ = yScaler.Scale(y)
 			img.Set(ix, int(iy), colorB)
+
+			// Draw gaussian.
+			x, _ = xScaler.Scale(float64(ix))
+			y = gaussian(x, 1, 1)
+			iy, _ = yScaler.Scale(y)
+			img.Set(ix, int(iy), color.RGBA{R: 0xFF, G: 0xFF, B: 0xFF})
 		}
 
 		// Middle to top right.
@@ -124,6 +130,14 @@ func htan(x float64) float64 {
 
 func sigmoid(x float64) float64 {
 	return 1 / (1 + math.Pow(math.E, -x))
+}
+
+func gaussian(x, mean, deviation float64) float64 {
+	numerator := 1.0
+	divisor := deviation * math.Sqrt(2.0*math.Pi)
+	powerNumerator := (x - mean) * (x - mean)
+	powerDivisor := 2.0 * (deviation * deviation)
+	return (numerator / divisor) * math.Exp(-(powerNumerator / powerDivisor))
 }
 
 func drawBackground(img *image.RGBA, c color.RGBA) {
